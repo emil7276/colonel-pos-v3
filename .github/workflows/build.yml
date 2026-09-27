@@ -1,0 +1,365 @@
+name: Build Colonel POS V3
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.29.2'
+          channel: stable
+
+      - name: Create Flutter project
+        run: |
+          mkdir app
+          cd app
+          flutter create . --platforms android --project-name colonel_pos_v3
+
+      - name: Replace main.dart
+        run: |
+          cat > app/lib/main.dart <<'DART'
+          import 'package:flutter/material.dart';
+
+          void main() {
+            runApp(const ColonelPOS());
+          }
+
+          class ColonelPOS extends StatelessWidget {
+            const ColonelPOS({super.key});
+
+            @override
+            Widget build(BuildContext context) {
+              return MaterialApp(
+                debugShowCheckedModeBanner: false,
+                title: 'Colonel Fried Chicken POS',
+                theme: ThemeData(
+                  colorScheme: ColorScheme.fromSeed(
+                    seedColor: Colors.red,
+                  ),
+                  useMaterial3: true,
+                ),
+                home: const LoginPage(),
+              );
+            }
+          }
+
+          class LoginPage extends StatefulWidget {
+            const LoginPage({super.key});
+
+            @override
+            State<LoginPage> createState() => _LoginPageState();
+          }
+
+          class _LoginPageState extends State<LoginPage> {
+            final username = TextEditingController();
+            final password = TextEditingController();
+
+            void login() {
+              if (username.text == 'admin' &&
+                  password.text == '1234') {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const HomePage(),
+                  ),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Username atau password salah'),
+                  ),
+                );
+              }
+            }
+
+            @override
+            Widget build(BuildContext context) {
+              return Scaffold(
+                body: Center(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text(
+                          '🍗',
+                          style: TextStyle(fontSize: 70),
+                        ),
+                        const SizedBox(height: 10),
+                        const Text(
+                          'COLONEL FRIED CHICKEN',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 8),
+                        const Text('POINT OF SALE'),
+                        const SizedBox(height: 35),
+                        TextField(
+                          controller: username,
+                          decoration: const InputDecoration(
+                            labelText: 'Username',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                        const SizedBox(height: 15),
+                        TextField(
+                          controller: password,
+                          obscureText: true,
+                          decoration: const InputDecoration(
+                            labelText: 'Password',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 50,
+                          child: ElevatedButton(
+                            onPressed: login,
+                            child: const Text('LOGIN'),
+                          ),
+                        ),
+                        const SizedBox(height: 15),
+                        const Text(
+                          'Admin: admin / 1234',
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }
+          }
+
+          class HomePage extends StatelessWidget {
+            const HomePage({super.key});
+
+            @override
+            Widget build(BuildContext context) {
+              return Scaffold(
+                appBar: AppBar(
+                  title: const Text('Colonel Fried Chicken POS'),
+                ),
+                body: GridView.count(
+                  padding: const EdgeInsets.all(20),
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 15,
+                  mainAxisSpacing: 15,
+                  children: [
+                    _menu(
+                      context,
+                      '🛒',
+                      'TRANSAKSI',
+                      const PosPage(),
+                    ),
+                    _menu(
+                      context,
+                      '📊',
+                      'LAPORAN',
+                      const ReportPage(),
+                    ),
+                    _menu(
+                      context,
+                      '⚙️',
+                      'PENGATURAN',
+                      const SettingsPage(),
+                    ),
+                    _menu(
+                      context,
+                      'ℹ️',
+                      'TENTANG',
+                      const AboutPage(),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            Widget _menu(
+              BuildContext context,
+              String icon,
+              String title,
+              Widget page,
+            ) {
+              return Card(
+                child: InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => page,
+                      ),
+                    );
+                  },
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        icon,
+                        style: const TextStyle(fontSize: 45),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+          }
+
+          class PosPage extends StatelessWidget {
+            const PosPage({super.key});
+
+            @override
+            Widget build(BuildContext context) {
+              final menu = [
+                'Dada',
+                'Paha Atas',
+                'Paha Bawah',
+                'Sayap',
+                'Paket Dada',
+                'Paket Paha Atas',
+                'Paket Paha Bawah',
+                'Paket Sayap',
+                'Sambal Geprek',
+                'Kentang Goreng',
+                'Air Mineral',
+                'Es Teh',
+              ];
+
+              return Scaffold(
+                appBar: AppBar(
+                  title: const Text('Transaksi'),
+                ),
+                body: ListView.builder(
+                  padding: const EdgeInsets.all(15),
+                  itemCount: menu.length,
+                  itemBuilder: (context, index) {
+                    return Card(
+                      child: ListTile(
+                        leading: const Text(
+                          '🍗',
+                          style: TextStyle(fontSize: 28),
+                        ),
+                        title: Text(menu[index]),
+                        subtitle: const Text('Klik untuk tambah'),
+                        trailing: const Icon(
+                          Icons.add_circle_outline,
+                        ),
+                        onTap: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                '${menu[index]} ditambahkan',
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    );
+                  },
+                ),
+              );
+            }
+          }
+
+          class ReportPage extends StatelessWidget {
+            const ReportPage({super.key});
+
+            @override
+            Widget build(BuildContext context) {
+              return Scaffold(
+                appBar: AppBar(
+                  title: const Text('Laporan'),
+                ),
+                body: const Center(
+                  child: Text(
+                    'LAPORAN PENJUALAN\n\n'
+                    'Omzet: Rp 0\n'
+                    'Transaksi: 0\n'
+                    'Produk terjual: 0',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 20),
+                  ),
+                ),
+              );
+            }
+          }
+
+          class SettingsPage extends StatelessWidget {
+            const SettingsPage({super.key});
+
+            @override
+            Widget build(BuildContext context) {
+              return Scaffold(
+                appBar: AppBar(
+                  title: const Text('Pengaturan'),
+                ),
+                body: const ListView(
+                  children: [
+                    ListTile(
+                      leading: Icon(Icons.store),
+                      title: Text('Colonel Fried Chicken'),
+                      subtitle: Text('Pengaturan toko'),
+                    ),
+                    ListTile(
+                      leading: Icon(Icons.person),
+                      title: Text('Pengguna'),
+                      subtitle: Text('Admin'),
+                    ),
+                  ],
+                ),
+              );
+            }
+          }
+
+          class AboutPage extends StatelessWidget {
+            const AboutPage({super.key});
+
+            @override
+            Widget build(BuildContext context) {
+              return Scaffold(
+                appBar: AppBar(
+                  title: const Text('Tentang'),
+                ),
+                body: const Center(
+                  child: Text(
+                    'Colonel Fried Chicken POS V3\n\n'
+                    'Sistem kasir untuk Colonel Fried Chicken',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 18),
+                  ),
+                ),
+              );
+            }
+          }
+          DART
+
+      - name: Build APK
+        run: |
+          cd app
+          flutter pub get
+          flutter build apk --release
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: colonel-pos-v3-apk
+          path: app/build/app/outputs/flutter-apk/app-release.apk
